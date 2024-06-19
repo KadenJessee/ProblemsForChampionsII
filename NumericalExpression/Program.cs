@@ -1,19 +1,25 @@
-﻿using System;
-
-namespace NumericalExpression
+﻿namespace NumericalExpression
 {
     internal class Program
     {
         static void Main(string[] args)
         {
             string input = Console.ReadLine();
+            int index = 0;
+            decimal result = EvaluateExpression(input, ref index);
+            Console.WriteLine("{0:f2}", result);
+        }
 
+        static decimal EvaluateExpression(string input, ref int index)
+        {
             decimal result = 0;
             int expressionOperator = '+';
 
-            for (int i = 0; i < input.Length; i++)
+            while (index < input.Length)
             {
-                char symbol = input[i];
+                char symbol = input[index];
+                index++;
+
                 if (symbol == '=')
                 {
                     break;
@@ -21,84 +27,48 @@ namespace NumericalExpression
 
                 if (symbol == '(')
                 {
-                    decimal innerResult = 0;
-                    int innerOperator = '+';
+                    decimal innerResult = EvaluateExpression(input, ref index);
 
-                    for (int j = i + 1; j < input.Length; j++)
-                    {
-                        char innerSymbol = input[j];
-                        if (innerSymbol == ')')
-                        {
-                            i = j;
-                            break;
-                        }
-
-                        if (innerSymbol == '+' || innerSymbol == '-' || innerSymbol == '/' || innerSymbol == '*')
-                        {
-                            innerOperator = innerSymbol;
-                        }
-                        else if (char.IsDigit(innerSymbol))
-                        {
-                            switch (innerOperator)
-                            {
-                                case '+':
-                                    innerResult += innerSymbol - '0';
-                                    break;
-                                case '-':
-                                    innerResult -= innerSymbol - '0';
-                                    break;
-                                case '*':
-                                    innerResult *= innerSymbol - '0';
-                                    break;
-                                case '/':
-                                    innerResult /= innerSymbol - '0';
-                                    break;
-                            }
-                        }
-                    }
-
-                    switch (expressionOperator)
-                    {
-                        case '+':
-                            result += innerResult;
-                            break;
-                        case '-':
-                            result -= innerResult;
-                            break;
-                        case '*':
-                            result *= innerResult;
-                            break;
-                        case '/':
-                            result /= innerResult;
-                            break;
-                    }
+                    result = ApplyOperator(result, expressionOperator, innerResult);
                 }
-
-                if (char.IsDigit(symbol))
+                else if (symbol == ')')
                 {
-                    switch (expressionOperator)
-                    {
-                        case '+':
-                            result += symbol - '0';
-                            break;
-                        case '-':
-                            result -= symbol - '0';
-                            break;
-                        case '*':
-                            result *= symbol - '0';
-                            break;
-                        case '/':
-                            result /= symbol - '0';
-                            break;
-                    }
+                    break;
                 }
-                else if (symbol == '+' || symbol == '-' || symbol == '/' || symbol == '*')
+                else if (char.IsDigit(symbol))
+                {
+                    decimal number = symbol - '0';
+                    result = ApplyOperator(result, expressionOperator, number);
+                }
+                else if (IsOperator(symbol))
                 {
                     expressionOperator = symbol;
                 }
             }
 
-            Console.WriteLine("{0:f2}", result);
+            return result;
+        }
+
+        static decimal ApplyOperator(decimal result, int expressionOperator, decimal number)
+        {
+            switch (expressionOperator)
+            {
+                case '+':
+                    return result + number;
+                case '-':
+                    return result - number;
+                case '*':
+                    return result * number;
+                case '/':
+                    return result / number;
+                default:
+                    throw new InvalidOperationException("Unsupported operator");
+            }
+        }
+
+        static bool IsOperator(char symbol)
+        {
+            return symbol == '+' || symbol == '-' || symbol == '*' || symbol == '/';
         }
     }
 }
